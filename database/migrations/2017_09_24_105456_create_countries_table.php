@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateUserRoleTable extends Migration
+class CreateCountriesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,14 @@ class CreateUserRoleTable extends Migration
      */
     public function up()
     {
-        Schema::create('user_role', function (Blueprint $table) {
-            $table->uuid('user_uuid');
-            $table->uuid('role_uuid');
-
-            $table->primary(['user_uuid', 'role_uuid']);
-
+        Schema::create('country', function (Blueprint $table) {
+            $table->uuid('country_uuid');
+            $table->string('short_name', 100);
+            $table->string('long_name', 100);
+            $table->string('type', 100)->nullable();
             $table->timestamps();
+
+            $table->primary('country_uuid');
         });
     }
 
@@ -30,6 +31,6 @@ class CreateUserRoleTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_role');
+        Schema::dropIfExists('country');
     }
 }

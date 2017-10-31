@@ -31,6 +31,6 @@ class SignUpVerification extends Mailable
      */
     public function build()
     {
-        return $this->markdown('emails.signup-verification');
+        return $this->markdown('emails.signup-welcome');
     }
 }

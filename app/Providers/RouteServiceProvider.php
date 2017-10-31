@@ -41,6 +41,8 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->mapCustomerRoutes();
 
+        $this->mapBusinessRoutes();
+
         //
     }
 
@@ -78,5 +80,12 @@ class RouteServiceProvider extends ServiceProvider
         Route::prefix('customer')
             ->namespace($this->namespace)
             ->group(base_path('routes/customer.php'));
+    }
+
+    protected function mapBusinessRoutes()
+    {
+        Route::prefix('business')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/business.php'));
     }
 }

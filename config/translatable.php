@@ -55,7 +55,7 @@ return [
     | $useTranslationFallback when defined
     |
     */
-    'use_fallback' => false,
+    'use_fallback' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -91,7 +91,7 @@ return [
     | application, set this to 'Trans'.
     |
     */
-    'translation_suffix' => 'Translation',
+    'translation_suffix' => 'Locale',
 
     /*
     |--------------------------------------------------------------------------
@@ -102,7 +102,7 @@ return [
     | translation model.
     |
     */
-    'locale_key' => 'locale',
+    'locale_key' => 'lang_iso_code',
 
     /*
     |--------------------------------------------------------------------------

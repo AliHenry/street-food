@@ -11,11 +11,13 @@
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::group(['namespace' => 'App\Http\Controllers\StreetFood'], function (){
+Route::group(['namespace' => 'App\Http\Controllers\StreetFood\Business'], function (){
 
-    Route::post('signup', 'CustomerController@registerCustomer');
+    Route::post('user', 'BusinessController@registerBizUser');
 
-    Route::post('login', 'CustomerController@loginCustomer');
+    Route::post('user/verify', 'BusinessController@verifyBizUser');
+
+    Route::post('', 'BusinessController@createBusiness');
 //
 //    Route::post('update-customer', 'CustomerController@updateCustomer');
 //

@@ -1,65 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\StreetFood;
-
+namespace App\Http\Controllers\StreetFood\Business;
 
 use App\Http\Controllers\StreetFoodController;
-use App\Model\User;
-use App\Service\CustomerService;
+use App\Service\BusinessService;
 use App\Service\ResponseService;
 use Illuminate\Http\Request;
 
-class CustomerController extends StreetFoodController
+class BusinessController extends StreetFoodController
 {
     //messages
     protected $messages = [];
 
-
-    public function registerCustomer(CustomerService $service, Request $request)
-    {
-        $input = $this->input;
-        $input['image'] = $request->image->store('');
-
-        try{
-            $customer = $service->registerCustomer($input, $this->messages);
-
-            if ($customer) {
-                return ResponseService::success([
-                    'message' => ['operation success'],
-                    'data'    => $customer
-                ]);
-            }
-            return ResponseService::error(['message' => $this->messages]);
-        }catch (\Exception $e){
-            return ResponseService::exceptionError($e);
-        }
-    }
-
-    public function loginCustomer(CustomerService $service)
+    public function registerBizUser(BusinessService $service)
     {
         $input = $this->input;
 
         try{
-            $customer = $service->loginCustomer($input, $this->messages);
-
-            if ($customer) {
-                return ResponseService::success([
-                    'message' => ['operation success'],
-                    'data'    => $customer
-                ]);
-            }
-            return ResponseService::error(['message' => $this->messages]);
-        }catch (\Exception $e){
-            return ResponseService::exceptionError($e);
-        }
-    }
-
-
-
-    public function getUsers()
-    {
-        try{
-            $user = User::all();
+            $user = $service->createBizUser($input, $this->messages);
 
             if ($user) {
                 return ResponseService::success([
@@ -73,4 +31,42 @@ class CustomerController extends StreetFoodController
         }
     }
 
+    public function verifyBizUser(BusinessService $service)
+    {
+        $input = $this->input;
+
+        try{
+            $user = $service->verifyBizUser($input, $this->messages);
+
+            if ($user) {
+                return ResponseService::success([
+                    'message' => ['operation success'],
+                    'data'    => $user
+                ]);
+            }
+            return ResponseService::error(['message' => $this->messages]);
+        }catch (\Exception $e){
+            return ResponseService::exceptionError($e);
+        }
+    }
+
+
+    public function createBusiness(BusinessService $service)
+    {
+        $input = $this->input;
+
+        try{
+            $business = $service->createVarifiedBusiness($input, $this->messages);
+
+            if ($business) {
+                return ResponseService::success([
+                    'message' => ['operation success'],
+                    'data'    => $business
+                ]);
+            }
+            return ResponseService::error(['message' => $this->messages]);
+        }catch (\Exception $e){
+            return ResponseService::exceptionError($e);
+        }
+    }
 }

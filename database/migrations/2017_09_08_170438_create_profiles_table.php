@@ -26,9 +26,6 @@ class CreateProfilesTable extends Migration
 
             $table->primary('profile_uuid');
 
-            $table->foreign('user_uuid')
-                ->references('user_uuid')->on('users')
-                ->onDelete('cascade');
         });
     }
 
