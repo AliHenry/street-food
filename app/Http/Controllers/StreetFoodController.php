@@ -7,10 +7,11 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class StreetFoodController extends Controller
 {
-    public $request, $input, $token, $user, $lang;
+    public $request, $input, $token, $user, $lang, $photo;
 
     /**
      * HottabController constructor.
@@ -19,6 +20,14 @@ class StreetFoodController extends Controller
     public function __construct(Request $request)
     {
         $this->token = $request->get('token', request()->header('token'));
+
+        if ($request->hasFile('photo')){
+            $image = $request->file('photo');
+            $filename = time().'.'.$image->getClientOriginalExtension();
+            $location = public_path('img/'.$filename);
+            Image::make($image)->resize(400, 400)->save($location);
+            $this->photo = $filename;
+        }
 
         //get the logged in user
         if ($this->token) {
@@ -46,6 +55,7 @@ class StreetFoodController extends Controller
         }
 
         $input = $request->all();
+        $input['photo'] = $this->photo;
         //set input
         $this->input = $input;
 

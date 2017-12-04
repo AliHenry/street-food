@@ -1,0 +1,22 @@
+runtime: php
+env: flex
+
+runtime_config:
+  document_root: public
+
+# Ensure we skip ".env", which is only for local development
+skip_files:
+  - .env
+
+env_variables:
+  # Put production environment variables here.
+  APP_LOG: errorlog
+  PROJECT_ID: street-food-186712
+  STORAGE_DIR: /tmp
+
+  ## Set these environment variables according to your CloudSQL configuration.
+  DB_HOST: localhost
+  DB_DATABASE: streetfooddb
+  DB_USERNAME: root
+  DB_PASSWORD: root
+  DB_SOCKET: "/cloudsql/street-food-186712:asia-east1:streetfooddb"

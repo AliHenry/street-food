@@ -21,4 +21,10 @@ Route::group(['namespace' => 'App\Http\Controllers\StreetFood'], function (){
 
     Route::get('users', 'CustomerController@getUsers');
 
+    Route::get('item/featured', 'ItemController@featuredItem');
+
+    Route::get('item/search', 'ItemController@searchItem');
+
+    Route::get('item', 'ItemController@allItem');
+
 });

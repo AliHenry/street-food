@@ -10,13 +10,14 @@ namespace App\Service;
 
 use App\Mail\SignUpVerification;
 use App\Model\Business;
+use App\Model\Category;
 use App\Model\City;
 use App\Model\Country;
 use App\Model\District;
+use App\Model\Item;
 use App\Model\Profile;
 use App\Model\Role;
 use App\Model\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -42,6 +43,29 @@ class BusinessService
         'address'            => 'sometimes|required|string',
         'geometry'           => 'sometimes|required|array',
         'address_components' => 'sometimes|required|array',
+    ];
+
+    //define the rules for create category
+    protected $cateRules = [
+        'name' => 'required|string',
+    ];
+
+    //define the rules for create category
+    protected $itemRules = [
+        'category_uuid' => 'required|string',
+        'name'          => 'required|string',
+        'description'   => 'sometimes|required|string',
+        'image'         => 'sometimes|required|string',
+        'price'         => 'sometimes|required|numeric',
+
+    ];
+
+    protected $getBizRules = [
+        'biz_uuid' => 'required|string',
+    ];
+
+    protected $BizRules = [
+        'token' => 'required|string',
     ];
 
     //define the rules for location
@@ -145,6 +169,8 @@ class BusinessService
 
         //udate user information
         $user->verified = 1;
+        $user->code = '';
+        $user->verification_token = '';
         $user->save();
 
         //make token
@@ -280,7 +306,7 @@ class BusinessService
         }
 
         //get long lat from geometry
-        $data['long'] = $data['geometry']['long'];
+        $data['lng'] = $data['geometry']['lng'];
         $data['lat'] = $data['geometry']['lat'];
 
         //create business
@@ -375,6 +401,69 @@ class BusinessService
         unset($business->translations);
 
         //return business
+        return $business;
+    }
+
+    public function getBusiness(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->getBizRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        $business = Business::find($data['biz_uuid']);
+        if (!$business) {
+            $message = 'Business not found';
+
+            return false;
+        }
+
+        $business->country;
+        $business->city;
+        $business->district;
+
+        return $business;
+    }
+
+    public function getBizOwner(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->BizRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        //get user from token
+        $userFromToken = JWTAuth::toUser($data['token']);
+
+        $user = User::find($userFromToken->user_uuid);
+
+        if (!$user) {
+            $message = 'no user found or user not varified';
+
+            return false;
+        }
+
+        $business = Business::where('user_uuid', $user->user_uuid)->first();
+        if (!$business) {
+            $message = 'Business not found';
+
+            return false;
+        }
+
+        $business->country;
+        $business->city;
+        $business->district;
+
         return $business;
     }
 
@@ -640,4 +729,179 @@ class BusinessService
         return $district;
     }
     /*******  END OF OUTLET COUNTRY, CITY AND DISTRICT **********/
+
+    /******* START CATEGORY *************/
+
+    public function createCategoryBiz(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->bizRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        //get user from token
+        $userFromToken = JWTAuth::toUser($data['token']);
+
+        $user = User::find($userFromToken->user_uuid);
+
+        if (!$user) {
+            $message = 'No user found';
+
+            return false;
+        }
+
+        $data['user_uuid'] = $user->user_uuid;
+
+        $business = Business::where('user_uuid', $user->user_uuid)->first();
+
+        //check if business exist
+        if (!$business) {
+            $message = 'No business found';
+
+            return false;
+        }
+
+        $service = new CategoryService();
+        $category = $service->createCategory($data);
+
+        //return category
+        return $category;
+    }
+
+    public function getBizCategory(array $data, &$message = [])
+    {
+
+        //get user from token
+        $userFromToken = JWTAuth::toUser($data['token']);
+
+        $user = User::find($userFromToken->user_uuid);
+
+        if (!$user) {
+            $message = 'No user found';
+
+            return false;
+        }
+
+        $data['user_uuid'] = $user->user_uuid;
+
+        $business = Business::where('user_uuid', $user->user_uuid)->first();
+
+        //check if business exist
+        if (!$business) {
+            $message = 'No business found';
+
+            return false;
+        }
+
+        $categories = Category::where('biz_uuid', $business->biz_uuid)->get();
+        //check if category exist
+        if (!$categories) {
+            $message = 'No category found';
+
+            return false;
+        }
+
+        //return categories
+        return $categories;
+    }
+
+
+    /******* END OF CATEGORY ***********/
+
+
+    /****** START OF ITEM *************/
+
+    public function createBizItem(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->itemRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        //get user from token
+        $userFromToken = JWTAuth::toUser($data['token']);
+
+        $user = User::find($userFromToken->user_uuid);
+
+        if (!$user) {
+            $message = 'No user found';
+
+            return false;
+        }
+
+        $data['user_uuid'] = $user->user_uuid;
+
+        $business = Business::where('user_uuid', $user->user_uuid)->first();
+
+        //check if business exist
+        if (!$business) {
+            $message = 'No business found';
+
+            return false;
+        }
+
+        $data['biz_uuid'] = $business->biz_uuid;
+
+        $service = new ItemSercice();
+        $item = $service->createItem($data);
+
+        //return item
+        return $item;
+    }
+
+    public function getBizItems(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->bizRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        //get user from token
+        $userFromToken = JWTAuth::toUser($data['token']);
+
+        $user = User::find($userFromToken->user_uuid);
+
+        if (!$user) {
+            $message = 'No user found';
+
+            return false;
+        }
+
+        $data['user_uuid'] = $user->user_uuid;
+
+        $business = Business::where('user_uuid', $user->user_uuid)->first();
+
+        //check if business exist
+        if (!$business) {
+            $message = 'No business found';
+
+            return false;
+        }
+
+        $items = Item::where('biz_uuid', $business->biz_uuid)->get();
+        //check if category exist
+        if (!$items) {
+            $message = 'No items found';
+
+            return false;
+        }
+
+        //return items
+        return $items;
+    }
 }

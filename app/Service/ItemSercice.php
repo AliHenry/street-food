@@ -8,32 +8,38 @@
 
 namespace App\Service;
 
-
+use App\Model\Category;
 use App\Model\Item;
+use Illuminate\Support\Facades\DB;
 
 class ItemSercice
 {
+
     protected $rules = [
-        'biz_uuid' => 'required|string',
+        'biz_uuid'      => 'required|string',
         'category_uuid' => 'required|string',
-        'name' => 'required|string',
-        'description' => 'sometimes|required|string',
-        'price' => 'required|decimal',
-        'image' => 'sometimes|required|string'
+        'name'          => 'required|string',
+        'description'   => 'sometimes|required|string',
+        'price'         => 'required|numeric',
+        'image'         => 'sometimes|required|string',
     ];
 
     protected $updateRules = [
-        'item_uuid' => 'required|string',
-        'name' => 'sometimes|required|string',
+        'item_uuid'   => 'required|string',
+        'name'        => 'sometimes|required|string',
         'description' => 'sometimes|required|string',
-        'price' => 'required|decimal',
-        'image' => 'sometimes|required|string',
+        'price'       => 'sometimes|required|numeric',
+        'image'       => 'sometimes|required|string',
+    ];
+
+    protected $featuredRules = [
+        'keyword' => 'sometimes|required|string',
     ];
 
     public function createItem(array $data, &$message = [])
     {
         //set category uuid
-        $data['category_uuid'] = UUIDService::generateUUID();
+        $data['item_uuid'] = UUIDService::generateUUID();
 
         //validation
         $validator = \Validator::make($data, $this->rules);
@@ -99,6 +105,73 @@ class ItemSercice
 
         //save item
         $item->save();
+
+        //return item
+        return $item;
+    }
+
+    public function allItem()
+    {
+        return Item::paginate(10);
+    }
+
+    public function featured(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->featuredRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        $items = Item::whereTranslationLike('name', '%'.$data['keyword'].'%')
+            ->limit(5)
+            ->get();
+
+        return $items;
+    }
+
+    public function search(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->featuredRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        $items = Item::whereTranslationLike('name', '%'.$data['keyword'].'%')
+            ->paginate(10);
+
+        return $items;
+    }
+
+    public function selectItem(array $data, &$message = [])
+    {
+        //validation
+        $validator = \Validator::make($data, $this->updateRules);
+
+        //if validation fails return error message
+        if ($validator->fails()) {
+            $message = $validator->messages();
+
+            return false;
+        }
+
+        // find item
+        $item = Item::where('item_uuid', $data['item_uuid'])->first();
+
+        if (!$item) {
+            $message = 'item not found';
+
+            return false;
+        }
 
         //return item
         return $item;

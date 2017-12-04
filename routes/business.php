@@ -17,14 +17,34 @@ Route::group(['namespace' => 'App\Http\Controllers\StreetFood\Business'], functi
 
     Route::post('user/verify', 'BusinessController@verifyBizUser');
 
+    Route::get('', 'BusinessController@getBusiness');
+
+});
+
+Route::group([
+    'middleware' => 'user.roles',
+    'roles' => 'Admin',
+    'namespace' => 'App\Http\Controllers\StreetFood\Business'
+], function (){
+
     Route::post('', 'BusinessController@createBusiness');
-//
-//    Route::post('update-customer', 'CustomerController@updateCustomer');
-//
-//    Route::post('create-customer-address', 'CustomerController@createAddress');
-//
-//    Route::post('update-customer-address', 'CustomerController@updateAddress');
-//
-//    Route::post('customer-details', 'CustomerController@getCustomerDetail');
+
+    Route::get('', 'BusinessController@getBizOwner');
+
+    Route::post('category', 'BusinessController@createCategory');
+
+    Route::put('category/{category_uuid}', 'BusinessController@updateCategory');
+
+    Route::get('category', 'BusinessController@getCategories');
+
+    Route::get('category/{category_uuid}', 'BusinessController@getCategory');
+
+    Route::post('item', 'BusinessController@createItem');
+
+    Route::put('item/{item_uuid}', 'BusinessController@updateItem');
+
+    Route::get('item', 'BusinessController@getItems');
+
+    Route::get('item/{item_uuid}', 'BusinessController@getItem');
 
 });

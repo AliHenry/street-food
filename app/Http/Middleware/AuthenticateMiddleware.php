@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Model\User;
 use Closure;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
@@ -30,7 +31,8 @@ class AuthenticateMiddleware
 
         try {
             //get user from token
-            $user = \JWTAuth::toUser($token);
+            $userFromToken = \JWTAuth::toUser($token);
+            $user = User::where('user_uuid', $userFromToken->user_uuid)->first();
 
             //check if user is set
             if (! $user) {

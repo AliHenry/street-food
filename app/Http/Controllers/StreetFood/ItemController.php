@@ -1,28 +1,27 @@
 <?php
 
-namespace App\Http\Controllers\StreetFood\Business;
+namespace App\Http\Controllers\StreetFood;
 
 use App\Http\Controllers\StreetFoodController;
-use App\Service\BusinessService;
+use App\Service\ItemSercice;
 use App\Service\ResponseService;
-use Illuminate\Http\Request;
 
-class BusinessController extends StreetFoodController
+class ItemController extends StreetFoodController
 {
     //messages
     protected $messages = [];
 
-    public function registerBizUser(BusinessService $service)
+    public function featuredItem(ItemSercice $service)
     {
         $input = $this->input;
 
         try{
-            $user = $service->createBizUser($input, $this->messages);
+            $items = $service->featured($input, $this->messages);
 
-            if ($user) {
+            if ($items) {
                 return ResponseService::success([
                     'message' => ['operation success'],
-                    'data'    => $user
+                    'data'    => $items
                 ]);
             }
             return ResponseService::error(['message' => $this->messages]);
@@ -31,17 +30,17 @@ class BusinessController extends StreetFoodController
         }
     }
 
-    public function verifyBizUser(BusinessService $service)
+    public function allItem(ItemSercice $service)
     {
         $input = $this->input;
 
         try{
-            $user = $service->verifyBizUser($input, $this->messages);
+            $items = $service->allItem();
 
-            if ($user) {
+            if ($items) {
                 return ResponseService::success([
                     'message' => ['operation success'],
-                    'data'    => $user
+                    'data'    => $items
                 ]);
             }
             return ResponseService::error(['message' => $this->messages]);
@@ -50,18 +49,17 @@ class BusinessController extends StreetFoodController
         }
     }
 
-
-    public function createBusiness(BusinessService $service)
+    public function searchItem(ItemSercice $service)
     {
         $input = $this->input;
 
         try{
-            $business = $service->createVarifiedBusiness($input, $this->messages);
+            $items = $service->search($input, $this->messages);
 
-            if ($business) {
+            if ($items) {
                 return ResponseService::success([
                     'message' => ['operation success'],
-                    'data'    => $business
+                    'data'    => $items
                 ]);
             }
             return ResponseService::error(['message' => $this->messages]);

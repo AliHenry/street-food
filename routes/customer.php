@@ -16,6 +16,7 @@ Route::group(['namespace' => 'App\Http\Controllers\StreetFood'], function (){
     Route::post('signup', 'CustomerController@registerCustomer');
 
     Route::post('login', 'CustomerController@loginCustomer');
+
 //
 //    Route::post('update-customer', 'CustomerController@updateCustomer');
 //
@@ -24,5 +25,22 @@ Route::group(['namespace' => 'App\Http\Controllers\StreetFood'], function (){
 //    Route::post('update-customer-address', 'CustomerController@updateAddress');
 //
 //    Route::post('customer-details', 'CustomerController@getCustomerDetail');
+
+});
+
+Route::group([
+    'middleware' => 'user.roles',
+    'roles' => 'User',
+    'namespace' => 'App\Http\Controllers\StreetFood'
+], function (){
+
+    Route::get('', 'CustomerController@getCustomer');
+
+    Route::put('', 'CustomerController@updateCustomer');
+
+    Route::post('/upload-photo', 'CustomerController@uploadPhoto');
+
+    Route::post('/change-password', 'CustomerController@changePwd');
+
 
 });

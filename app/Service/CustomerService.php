@@ -14,7 +14,11 @@ use App\Model\Profile;
 use App\Model\Role;
 use App\Model\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
+use Intervention\Image\File;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CustomerService
@@ -25,7 +29,7 @@ class CustomerService
         'email'     => 'required|email|unique:users|email',
         'password'  => 'required|string|min:6',
         'firstname' => 'required|string',
-        'lastname'  => 'required|string'
+        'lastname'  => 'required|string',
     ];
 
     //validation rule for login
@@ -38,6 +42,27 @@ class CustomerService
     protected $verifyRule = [
         'code'               => 'sometimes|required|string',
         'verification_token' => 'sometimes|required|string',
+    ];
+
+    //validation rule for login
+    protected $changePwdRule = [
+        'old_password' => 'required|string',
+        'new_password' => 'required|string',
+    ];
+
+    //validation rule for login
+    protected $photoRule = [
+        'photo' => 'sometimes|required|string'
+    ];
+
+    //validation rule for login
+    protected $updateProfileRule = [
+        'firstname' => 'sometimes|required|string',
+        'lastname'  => 'sometimes|required|string',
+        'phone'     => 'sometimes|required|string',
+        'address'   => 'sometimes|required|string',
+        'country'   => 'sometimes|required|string',
+        'city'      => 'sometimes|required|string',
     ];
 
     protected $messages;
@@ -70,6 +95,7 @@ class CustomerService
         $user->name = $data['firstname'];
         $user->email = $data['email'];
         $user->password = bcrypt($data['password']);
+        $user->verified = 1;
 
         //save user if not return false and message
         if (!$user->save()) {
@@ -97,7 +123,7 @@ class CustomerService
         $profile->user_uuid = $data['user_uuid'];
         $profile->first_name = $data['firstname'];
         $profile->last_name = $data['lastname'];
-        $profile->photo = $data['image'];
+        $profile->photo = 'default-user.jpg';
         $profile->save();
 
         $user->profile;
@@ -114,7 +140,7 @@ class CustomerService
         $validator = \Validator::make($data, $this->loginRule);
 
         if ($validator->fails()) {
-            $message = $validator->messages();
+            $message = $validator->messages()->toArray();
 
             return false;
         }
@@ -172,11 +198,28 @@ class CustomerService
             'token'         => $token,
             'refresh_token' => $refreshToken,
             'user'          => $user,
-            'user_result'   => $userResult,
+            'profile'       => $userResult,
         ];
 
         //return result
         return $result;
+    }
+
+    public function getCustomer(array $data, array &$message = [])
+    {
+        //get user from token
+        $user = JWTAuth::toUser($data['token']);
+
+        $profile = Profile::where('user_uuid', $user->user_uuid)->first();
+        if (!$profile) {
+            $message = 'Profile not found';
+
+            return false;
+        }
+
+        $user->profile = $profile;
+
+        return $user;
     }
 
     public function createCustomerProfile(array $data, array &$message = [])
@@ -187,7 +230,7 @@ class CustomerService
         $validator = \Validator::make($data, $this->rule);
 
         if ($validator->fails()) {
-            $message = $validator->messages();
+            $message = $validator->messages()->toArray();
 
             return false;
         }
@@ -208,6 +251,106 @@ class CustomerService
         return $profile;
         //return $profile;
 
+    }
+
+    public function updateCustomer(array $data, array &$message = [])
+    {
+        //validate data against rule
+        $validator = \Validator::make($data, $this->updateProfileRule);
+
+        if ($validator->fails()) {
+            $message = $validator->messages()->toArray();
+
+            return false;
+        }
+
+        //get user from token
+        $tokenUser = JWTAuth::toUser($data['token']);
+        $user = User::find($tokenUser->user_uuid);
+
+        !isset($data['firstname']) ? : $user->name = $data['firstname'];
+        $user->save();
+
+        $profile = Profile::where('user_uuid', $user->user_uuid)->first();
+        if (!$profile) {
+            $message = 'Profile not found';
+
+            return false;
+        }
+
+        !isset($data['firstname']) ? : $profile->first_name = $data['firstname'];
+        !isset($data['lastname']) ? : $profile->last_name = $data['lastname'];
+        !isset($data['phone']) ? : $profile->phone = $data['phone'];
+        !isset($data['address']) ? : $profile->address = $data['address'];
+        !isset($data['country']) ? : $profile->country = $data['country'];
+        !isset($data['city']) ? : $profile->city = $data['city'];
+        !isset($data['image']) ? : $profile->photo = $data['image'] ;
+        $profile->save();
+
+        $user->profile;
+
+        return $user;
+    }
+
+    public function changePwd(array $data, array &$message = [])
+    {
+        //validate data against rule
+        $validator = \Validator::make($data, $this->changePwdRule);
+
+        if ($validator->fails()) {
+            $message = $validator->messages()->toArray();
+
+            return false;
+        }
+
+        //get user from token
+        $tokenUser = JWTAuth::toUser($data['token']);
+        $user = User::find($tokenUser->user_uuid);
+
+        if (!Hash::check($data['old_password'], $user->password)) {
+            $message = 'Password not match';
+
+            return false;
+        }
+
+        $user->password = bcrypt($data['new_password']);
+        $user->save();
+
+        return $message = 'Password successfully changed';
+    }
+
+
+    public function uploadPhoto(array $data, array &$message = [])
+    {
+        //validate data against rule
+        $validator = \Validator::make($data, $this->photoRule);
+
+        if ($validator->fails()) {
+            $message = $validator->messages()->toArray();
+
+            return false;
+        }
+
+        //get user from token
+        $tokenUser = JWTAuth::toUser($data['token']);
+        $user = User::find($tokenUser->user_uuid);
+
+        $profile = Profile::where('user_uuid', $user->user_uuid)->first();
+        if (!$profile) {
+            $message = 'Profile not found';
+
+            return false;
+        }
+
+        if(isset($data['photo'])){
+            Storage::delete($profile->photo);
+        }
+
+        $profile->photo = $data['photo'];
+        $profile->save();
+
+
+        return $message = 'Image successfully uploaded';
     }
 
     private function generateToken()
@@ -238,14 +381,10 @@ class CustomerService
 
         //check if role isset and its Admin
         if (isset($user->role) && $user->role == 'Admin') {
-            $biz = Business::where('user_uuid', $user->user_uuid)->first();
-
-            return ['business' => $biz];
+            return $biz = Business::where('user_uuid', $user->user_uuid)->first();
         } elseif (isset($user->role) && $user->role == 'User') //check if role isset and its User
         {
-            $profile = Profile::where('user_uuid', $user->user_uuid)->first();
-
-            return ['profile' => $profile];
+            return $profile = Profile::where('user_uuid', $user->user_uuid)->first();
         }
 
         //return false if non is true

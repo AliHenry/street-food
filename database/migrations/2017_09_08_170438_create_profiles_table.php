@@ -18,7 +18,6 @@ class CreateProfilesTable extends Migration
             $table->uuid('user_uuid');
             $table->string('first_name', 60);
             $table->string('last_name', 60);
-            $table->date('dob');
             $table->string('phone', 20)->nullable();
             $table->string('address')->nullable();
             $table->text('photo')->nullable();
